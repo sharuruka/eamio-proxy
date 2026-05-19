@@ -9,20 +9,30 @@ DEBUGFLAGS = -g -O0
 DLL_NAME = eamio.dll
 
 OUT_DIR = out
-OUT_X64_DIR = $(OUT_DIR)/x64
-OUT_X86_DIR = $(OUT_DIR)/x86
+X64_DIR = x64
+X86_DIR = x86
+ZIP_NAME = eamio-proxy.zip
 
-all: build-x64 build-x86
+DOCKER_IMAGE = eamio-proxy:latest
+
+all: package
 
 build-x64:
-	mkdir -p $(OUT_X64_DIR)
-	$(ARCH_PREFIX_64)$(CC) $(CCFLAGS) $(DLL_FLAGS) $(INCLUDES) $(LDFLAGS) $(OPTIMIZEFLAGS) -o $(OUT_X64_DIR)/$(DLL_NAME) src/eamio-proxy.cpp src/eamio-proxy.def
+	mkdir -p $(OUT_DIR)/$(X64_DIR)
+	$(ARCH_PREFIX_64)$(CC) $(CCFLAGS) $(DLL_FLAGS) $(INCLUDES) $(LDFLAGS) $(OPTIMIZEFLAGS) -o $(OUT_DIR)/$(X64_DIR)/$(DLL_NAME) src/eamio-proxy.cpp src/eamio-proxy.def
 
 build-x86:
-	mkdir -p $(OUT_DIR)/x86
-	$(ARCH_PREFIX_32)$(CC) $(CCFLAGS) $(DLL_FLAGS) $(INCLUDES) $(LDFLAGS) $(OPTIMIZEFLAGS) -o $(OUT_X86_DIR)/$(DLL_NAME) src/eamio-proxy.cpp src/eamio-proxy.def
+	mkdir -p $(OUT_DIR)/$(X86_DIR)
+	$(ARCH_PREFIX_32)$(CC) $(CCFLAGS) $(DLL_FLAGS) $(INCLUDES) $(LDFLAGS) $(OPTIMIZEFLAGS) -o $(OUT_DIR)/$(X86_DIR)/$(DLL_NAME) src/eamio-proxy.cpp src/eamio-proxy.def
 
-.PHONY: all clean build-x64 build-x86
+package: build-x64 build-x86
+	cd $(OUT_DIR) && zip -r $(ZIP_NAME) $(X64_DIR) $(X86_DIR)
+
+docker-build:
+	docker build -t $(DOCKER_IMAGE) --target builder .
+	docker run -v $$(pwd):/app $(DOCKER_IMAGE)
+
+.PHONY: all clean build-x64 build-x86 docker-build package
 
 clean:
 	rm -rf $(OUT_DIR)
