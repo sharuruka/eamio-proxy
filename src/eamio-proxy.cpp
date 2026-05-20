@@ -53,12 +53,7 @@ bool proxy_init()
             "Listing EAMIO DLL target: %s",
             dll_name.c_str());
 
-        /* Try GetModuleHandleA first, then LoadLibraryA if for some reason the
-         * user manually injected the DLL. */
-        HMODULE dll_handle = GetModuleHandleA(dll_name.c_str());
-
-        if (dll_handle == NULL)
-            dll_handle = LoadLibraryA(dll_name.c_str());
+        HMODULE dll_handle = LoadLibraryA(dll_name.c_str());
 
         if (dll_handle == NULL) {
             fatal_logger(
