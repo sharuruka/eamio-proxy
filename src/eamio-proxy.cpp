@@ -242,12 +242,16 @@ extern "C" uint8_t __cdecl eam_io_read_card(
     return EAM_IO_CARD_NONE;
 }
 
+/* Not too sure about how slotted readers should be treated, haven't got any to
+ * test. Return false only if all forwarded card slot commands return false. */
+
 extern "C" bool __cdecl eam_io_card_slot_cmd(uint8_t unit_no, uint8_t cmd)
 {
+    bool result = false;
     for (const auto &eamio_dll_target : eamio_dll_targets) {
-        eamio_dll_target.functions.eam_io_card_slot_cmd(unit_no, cmd);
+        result |= eamio_dll_target.functions.eam_io_card_slot_cmd(unit_no, cmd);
     }
-    return false;
+    return result;
 }
 
 /* The point is to forward polls so that eamio implementations can update
