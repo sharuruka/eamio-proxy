@@ -120,8 +120,7 @@ bool proxy_init()
     return true;
 }
 
-/* eam_io_set_loggers is always the first function being called so it's treated
- * as the entrypoint to load all modules listed in the config file. */
+/* eam_io_set_loggers is always the first function being called. */
 
 extern "C" void __cdecl eam_io_set_loggers(
     log_formatter_t misc,
@@ -133,17 +132,6 @@ extern "C" void __cdecl eam_io_set_loggers(
     info_logger = info;
     warning_logger = warning;
     fatal_logger = fatal;
-
-    proxy_initialized = proxy_init();
-
-    if (!proxy_initialized) {
-        return;
-    }
-
-    for (const auto &eamio_dll_target : eamio_dll_targets) {
-        eamio_dll_target.functions.eam_io_set_loggers(
-            misc, info, warning, fatal);
-    }
 }
 
 extern "C" bool __cdecl eam_io_init(
@@ -151,6 +139,8 @@ extern "C" bool __cdecl eam_io_init(
     thread_join_t thread_join,
     thread_destroy_t thread_destroy)
 {
+    proxy_initialized = proxy_init();
+
     if (!proxy_initialized) {
         return false;
     }
@@ -160,6 +150,10 @@ extern "C" bool __cdecl eam_io_init(
             PROXY_MODULE_NAME,
             "Initializing card reader emulation DLL: %s",
             eamio_dll_target.dll_name.c_str());
+        /* eam_io_set_loggers must always be the first function called on the
+         * eamio module. */
+        eamio_dll_target.functions.eam_io_set_loggers(
+            misc_logger, info_logger, warning_logger, fatal_logger);
         if (!eamio_dll_target.functions.eam_io_init(
                 thread_create, thread_join, thread_destroy)) {
             warning_logger(
