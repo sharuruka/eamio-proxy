@@ -32,7 +32,10 @@ docker-build:
 	docker build -t $(DOCKER_IMAGE) --target builder .
 	docker run -v $$(pwd):/app $(DOCKER_IMAGE)
 
-.PHONY: all clean build-x64 build-x86 docker-build package
+format:
+	find src -name '*.cpp' -o -name '*.hpp' -o -name '*.c' -o -name '*.h' | xargs clang-format -i
+
+.PHONY: all clean build-x64 build-x86 docker-build package format
 
 clean:
 	rm -rf $(OUT_DIR)
